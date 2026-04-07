@@ -30,4 +30,4 @@ Thumbs.db
 # Claude Code
 .claude/
 
-/src/generated/prisma
+/backend/src/generated/prisma
