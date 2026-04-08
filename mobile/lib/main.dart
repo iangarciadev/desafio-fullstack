@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Gestão de Clientes',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
       home: const LoginScreen(),
     );
   }
