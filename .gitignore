@@ -3,7 +3,9 @@ node_modules/
 
 # Build output
 dist/
+dist-ssr/
 build/
+coverage/
 
 # Environment variables
 .env
@@ -26,6 +28,20 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# TypeScript
+*.tsbuildinfo
+
+# Cache
+.eslintcache
+
+# Vite / Vue
+*.timestamp-*-*.mjs
+__screenshots__/
 
 # Claude Code
 .claude/
