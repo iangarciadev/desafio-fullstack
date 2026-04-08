@@ -36,6 +36,8 @@ final cardDecoration = BoxDecoration(
   ],
 );
 
+/// Constrói e retorna o [ThemeData] global do aplicativo com cores, fontes
+/// e estilos padronizados para botões, inputs e AppBar.
 ThemeData buildAppTheme() {
   return ThemeData(
     useMaterial3: true,

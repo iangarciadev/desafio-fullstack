@@ -21,6 +21,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     fetchClients();
   }
 
+  /// Busca a lista de clientes do usuário autenticado na API e atualiza o estado.
   Future<void> fetchClients() async {
     final response = await apiGet('/clients');
     setState(() {
@@ -29,21 +30,28 @@ class _ClientsScreenState extends State<ClientsScreen> {
     });
   }
 
+  /// Cria um novo cliente com [name] e [email] via API e recarrega a lista.
   Future<void> createClient(String name, String email) async {
     await apiPost('/clients', {'name': name, 'email': email});
     fetchClients();
   }
 
+  /// Atualiza o cliente de id [clientId] com novos [name] e [email] via API
+  /// e recarrega a lista.
   Future<void> editClient(int clientId, String name, String email) async {
     await apiPut('/clients/$clientId', {'name': name, 'email': email});
     fetchClients();
   }
 
+  /// Remove o cliente de id [clientId] via API e recarrega a lista.
   Future<void> deleteClient(int clientId) async {
     await apiDelete('/clients/$clientId');
     fetchClients();
   }
 
+  /// Exibe um modal com formulário de criação ou edição de cliente.
+  /// Se [client] for fornecido, pré-preenche os campos para edição;
+  /// caso contrário, o formulário é exibido vazio para criação.
   void _showClientForm({Map? client}) {
     final nameCtrl = TextEditingController(text: client?['name'] ?? '');
     final emailCtrl = TextEditingController(text: client?['email'] ?? '');
@@ -146,6 +154,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
+  /// Exibe um diálogo de confirmação antes de remover o cliente de id [clientId].
   void _confirmDelete(int clientId) {
     showDialog(
       context: context,
@@ -185,6 +194,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
+  /// Constrói a tela de listagem de clientes com FAB para criação e opções
+  /// de edição/exclusão por item.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -22,6 +22,8 @@ class _TasksScreenState extends State<TasksScreen> {
     fetchTasks();
   }
 
+  /// Busca as tarefas do cliente atual na API, aplicando o filtro de [selectedStatus]
+  /// se definido, e atualiza o estado com os resultados.
   Future<void> fetchTasks() async {
     String url = '/tasks?clientId=${widget.clientId}';
     if (selectedStatus != null) url += '&status=$selectedStatus';
@@ -32,11 +34,14 @@ class _TasksScreenState extends State<TasksScreen> {
     });
   }
 
+  /// Atualiza o [status] da tarefa de id [taskId] via API e recarrega a lista.
   Future<void> updateStatus(int taskId, String status) async {
     await apiPut('/tasks/$taskId', {'status': status});
     fetchTasks();
   }
 
+  /// Cria uma nova tarefa com [title] e [description] vinculada ao cliente atual
+  /// via API e recarrega a lista.
   Future<void> createTask(String title, String description) async {
     await apiPost('/tasks', {
       'title': title,
@@ -46,6 +51,8 @@ class _TasksScreenState extends State<TasksScreen> {
     fetchTasks();
   }
 
+  /// Atualiza o [title] e [description] da tarefa de id [taskId] via API
+  /// e recarrega a lista.
   Future<void> editTask(int taskId, String title, String description) async {
     await apiPut('/tasks/$taskId', {
       'title': title,
@@ -54,11 +61,14 @@ class _TasksScreenState extends State<TasksScreen> {
     fetchTasks();
   }
 
+  /// Remove a tarefa de id [taskId] via API e recarrega a lista.
   Future<void> deleteTask(int taskId) async {
     await apiDelete('/tasks/$taskId');
     fetchTasks();
   }
 
+  /// Retorna um badge colorido representando o [status] da tarefa
+  /// ('PENDING', 'IN_PROGRESS' ou 'DONE').
   Widget _statusBadge(String status) {
     final configs = {
       'PENDING': (
@@ -98,6 +108,8 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  /// Exibe um modal com as opções de status para a tarefa de id [taskId].
+  /// Atualiza o status apenas se o valor selecionado for diferente de [currentStatus].
   void _showStatusPicker(int taskId, String currentStatus) {
     showModalBottomSheet(
       context: context,
@@ -159,6 +171,9 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  /// Exibe um modal com formulário de criação ou edição de tarefa.
+  /// Se [task] for fornecido, pré-preenche os campos para edição;
+  /// caso contrário, o formulário é exibido vazio para criação.
   void _showTaskForm({Map? task}) {
     final titleCtrl = TextEditingController(text: task?['title'] ?? '');
     final descCtrl = TextEditingController(text: task?['description'] ?? '');
@@ -259,6 +274,7 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  /// Exibe um diálogo de confirmação antes de remover a tarefa de id [taskId].
   void _confirmDelete(int taskId) {
     showDialog(
       context: context,
@@ -298,6 +314,8 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  /// Constrói a barra de filtros de status (Todos, Pendente, Em andamento, Concluído)
+  /// como uma linha horizontal de [ChoiceChip]s.
   Widget _buildFilters() {
     final filters = <(String?, String)>[
       (null, 'Todos'),
@@ -330,6 +348,8 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  /// Constrói a tela de listagem de tarefas com filtros, FAB para criação
+  /// e opções de edição, exclusão e troca de status por item.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

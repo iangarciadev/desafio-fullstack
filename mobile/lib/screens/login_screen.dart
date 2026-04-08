@@ -17,6 +17,9 @@ class _LoginScreenState extends State<LoginScreen> {
   String error = '';
   bool loading = false;
 
+  /// Envia as credenciais para a API e, em caso de sucesso, armazena o token
+  /// JWT em [authToken] e navega para [ClientsScreen]. Em caso de falha,
+  /// exibe a mensagem de erro na tela.
   Future<void> handleLogin() async {
     setState(() {
       loading = true;
@@ -42,6 +45,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Constrói a tela de login com campos de e-mail e senha, botão de acesso
+  /// e área de exibição de erro.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
