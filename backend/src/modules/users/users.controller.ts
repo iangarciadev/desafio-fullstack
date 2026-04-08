@@ -1,12 +1,28 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { z } from 'zod'
 import prisma from '../../prisma'
+
+const registerSchema = z.object({
+  email: z.string().email({ message: 'E-mail inválido' }),
+  password: z.string().min(6, { message: 'A senha deve ter no mínimo 6 caracteres' }),
+})
+
+const loginSchema = z.object({
+  email: z.string().email({ message: 'E-mail inválido' }),
+  password: z.string().min(1, { message: 'Senha obrigatória' }),
+})
 
 // Cadastra um novo usuário. Verifica se o e-mail já existe, faz o hash da senha
 // e salva no banco. Retorna o id e e-mail do usuário criado.
 export async function register(req: Request, res: Response) {
-  const { email, password } = req.body
+  const parsed = registerSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message })
+  }
+
+  const { email, password } = parsed.data
 
   const existingUser = await prisma.user.findUnique({ where: { email } })
   if (existingUser) {
@@ -25,7 +41,12 @@ export async function register(req: Request, res: Response) {
 // Autentica um usuário. Confere se o e-mail existe e se a senha bate com o hash
 // armazenado. Em caso de sucesso, devolve um JWT válido por 1 dia.
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body
+  const parsed = loginSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message })
+  }
+
+  const { email, password } = parsed.data
 
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user) {
