@@ -14,6 +14,7 @@ class TasksScreen extends StatefulWidget {
 class _TasksScreenState extends State<TasksScreen> {
   List tasks = [];
   bool loading = true;
+  String? selectedStatus;
 
   @override
   void initState() {
@@ -22,7 +23,9 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Future<void> fetchTasks() async {
-    final response = await apiGet('/tasks?clientId=${widget.clientId}');
+    String url = '/tasks?clientId=${widget.clientId}';
+    if (selectedStatus != null) url += '&status=$selectedStatus';
+    final response = await apiGet(url);
     setState(() {
       tasks = response;
       loading = false;
@@ -134,22 +137,58 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  Widget _buildFilters() {
+    final filters = <(String?, String)>[
+      (null, 'Todos'),
+      ('PENDING', 'Pendente'),
+      ('IN_PROGRESS', 'Em andamento'),
+      ('DONE', 'Concluído'),
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: filters.map((f) {
+          final (value, label) = f;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(label),
+              selected: selectedStatus == value,
+              onSelected: (_) {
+                setState(() {
+                  selectedStatus = value;
+                  loading = true;
+                });
+                fetchTasks();
+              },
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Tarefas')),
-      body: loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : tasks.isEmpty
-              ? Center(
-                  child: Text(
-                    'Nenhuma tarefa encontrada.',
-                    style: GoogleFonts.inter(color: AppColors.textMuted),
-                  ),
-                )
-              : ListView.builder(
+      body: Column(
+        children: [
+          _buildFilters(),
+          Expanded(
+            child: loading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
+                : tasks.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Nenhuma tarefa encontrada.',
+                          style: GoogleFonts.inter(color: AppColors.textMuted),
+                        ),
+                      )
+                    : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: tasks.length,
                   itemBuilder: (context, index) {
@@ -206,6 +245,9 @@ class _TasksScreenState extends State<TasksScreen> {
                     );
                   },
                 ),
+          ),
+        ],
+      ),
     );
   }
 }
