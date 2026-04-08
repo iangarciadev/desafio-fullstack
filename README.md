@@ -32,6 +32,7 @@ Localizado em [backend/](backend/).
 | **bcrypt** | Hash de senhas antes de armazená-las no banco |
 | **cors** | Middleware para liberar requisições cross-origin do frontend |
 | **swagger-jsdoc + swagger-ui-express** | Geração e exibição da documentação interativa da API |
+| **pino + pino-http** | Logging estruturado em JSON das requisições e eventos do servidor |
 | **ts-node** | Execução direta de arquivos TypeScript em desenvolvimento |
 
 ### Como rodar
@@ -42,6 +43,20 @@ cp .env.example .env  # configure DATABASE_URL e JWT_SECRET
 npm install
 npx prisma migrate dev
 npm run dev
+```
+
+### Logs estruturados
+
+O backend utiliza [Pino](https://getpino.io) para logging estruturado em JSON. Todas as requisições HTTP são registradas automaticamente, incluindo método, rota, status code e tempo de resposta.
+
+- **Em desenvolvimento:** logs exibidos no terminal com formatação colorida via `pino-pretty`
+- **Em produção:** logs em JSON puro no stdout
+- **Arquivo:** `backend/logs/app.log` (criado automaticamente, ignorado pelo git)
+
+Exemplo de entrada no arquivo de log:
+```json
+{"level":30,"time":1712345679,"method":"POST","url":"/users/login","statusCode":200,"responseTime":43}
+{"level":40,"time":1712345680,"path":"/clients","method":"GET","msg":"Auth rejeitado: token inválido"}
 ```
 
 ### Documentação da API
