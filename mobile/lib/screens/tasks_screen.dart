@@ -37,6 +37,28 @@ class _TasksScreenState extends State<TasksScreen> {
     fetchTasks();
   }
 
+  Future<void> createTask(String title, String description) async {
+    await apiPost('/tasks', {
+      'title': title,
+      'description': description,
+      'clientId': widget.clientId,
+    });
+    fetchTasks();
+  }
+
+  Future<void> editTask(int taskId, String title, String description) async {
+    await apiPut('/tasks/$taskId', {
+      'title': title,
+      'description': description,
+    });
+    fetchTasks();
+  }
+
+  Future<void> deleteTask(int taskId) async {
+    await apiDelete('/tasks/$taskId');
+    fetchTasks();
+  }
+
   Widget _statusBadge(String status) {
     final configs = {
       'PENDING': (
@@ -137,6 +159,145 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  void _showTaskForm({Map? task}) {
+    final titleCtrl = TextEditingController(text: task?['title'] ?? '');
+    final descCtrl = TextEditingController(text: task?['description'] ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              task == null ? 'Nova tarefa' : 'Editar tarefa',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: titleCtrl,
+              autofocus: true,
+              style: GoogleFonts.inter(color: AppColors.text),
+              decoration: InputDecoration(
+                labelText: 'Título',
+                labelStyle: GoogleFonts.inter(color: AppColors.textMuted),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descCtrl,
+              style: GoogleFonts.inter(color: AppColors.text),
+              decoration: InputDecoration(
+                labelText: 'Descrição (opcional)',
+                labelStyle: GoogleFonts.inter(color: AppColors.textMuted),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                final t = titleCtrl.text.trim();
+                if (t.isEmpty) return;
+                Navigator.pop(context);
+                if (task == null) {
+                  createTask(t, descCtrl.text.trim());
+                } else {
+                  editTask(task['id'], t, descCtrl.text.trim());
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                task == null ? 'Adicionar' : 'Salvar',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(int taskId) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+          'Excluir tarefa',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
+        ),
+        content: Text(
+          'Tem certeza que deseja excluir esta tarefa?',
+          style: GoogleFonts.inter(color: AppColors.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancelar',
+              style: GoogleFonts.inter(color: AppColors.textMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              deleteTask(taskId);
+            },
+            child: Text(
+              'Excluir',
+              style: GoogleFonts.inter(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFilters() {
     final filters = <(String?, String)>[
       (null, 'Todos'),
@@ -173,6 +334,11 @@ class _TasksScreenState extends State<TasksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Tarefas')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showTaskForm(),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: Column(
         children: [
           _buildFilters(),
@@ -189,62 +355,99 @@ class _TasksScreenState extends State<TasksScreen> {
                         ),
                       )
                     : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    final status = task['status'] as String;
+                        padding: const EdgeInsets.all(16),
+                        itemCount: tasks.length,
+                        itemBuilder: (context, index) {
+                          final task = tasks[index];
+                          final status = task['status'] as String;
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      decoration: cardDecoration,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: cardDecoration,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    task['title'],
-                                    style: GoogleFonts.inter(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.text,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          task['title'],
+                                          style: GoogleFonts.inter(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.text,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        _statusBadge(status),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  _statusBadge(status),
+                                  GestureDetector(
+                                    onTap: () =>
+                                        _showStatusPicker(task['id'], status),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.background,
+                                        borderRadius:
+                                            BorderRadius.circular(6),
+                                        border: Border.all(
+                                            color: AppColors.border),
+                                      ),
+                                      child: const Icon(
+                                        Icons.swap_vert,
+                                        size: 18,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  PopupMenuButton<String>(
+                                    icon: const Icon(
+                                      Icons.more_vert,
+                                      size: 18,
+                                      color: AppColors.textMuted,
+                                    ),
+                                    color: AppColors.surface,
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showTaskForm(task: task);
+                                      } else if (value == 'delete') {
+                                        _confirmDelete(task['id']);
+                                      }
+                                    },
+                                    itemBuilder: (_) => [
+                                      PopupMenuItem(
+                                        value: 'edit',
+                                        child: Text(
+                                          'Editar',
+                                          style: GoogleFonts.inter(
+                                              color: AppColors.text),
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: Text(
+                                          'Excluir',
+                                          style: GoogleFonts.inter(
+                                              color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () =>
-                                  _showStatusPicker(task['id'], status),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.background,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: AppColors.border),
-                                ),
-                                child: const Icon(
-                                  Icons.swap_vert,
-                                  size: 18,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
           ),
         ],
       ),

@@ -42,3 +42,13 @@ Future<dynamic> apiPut(String path, Map<String, dynamic> body) async {
   );
   return jsonDecode(response.body);
 }
+
+Future<void> apiDelete(String path) async {
+  await http.delete(
+    Uri.parse('$baseUrl$path'),
+    headers: {
+      'Content-Type': 'application/json',
+      if (authToken != null) 'Authorization': 'Bearer $authToken',
+    },
+  );
+}
