@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 const String baseUrl = String.fromEnvironment(
@@ -9,6 +10,9 @@ const String baseUrl = String.fromEnvironment(
 
 /// Token JWT do usuário autenticado. Nulo quando não há sessão ativa.
 String? authToken;
+
+/// Chave global do navegador usada para redirecionar ao login em caso de 401/403.
+final navigatorKey = GlobalKey<NavigatorState>();
 
 /// Exceção lançada quando a API retorna um status de erro (4xx/5xx)
 /// ou quando ocorre um erro de rede/decodificação.
@@ -29,7 +33,13 @@ Map<String, String> get _headers => {
     };
 
 /// Decodifica a resposta HTTP e lança [ApiException] em caso de erro.
+/// Em caso de 401 ou 403, limpa o token e redireciona para o login.
 dynamic _decode(http.Response response) {
+  if (response.statusCode == 401 || response.statusCode == 403) {
+    authToken = null;
+    navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (_) => false);
+    throw ApiException(response.statusCode, 'Sessão expirada. Faça login novamente.');
+  }
   if (response.body.isEmpty) {
     if (response.statusCode >= 200 && response.statusCode < 300) return null;
     throw ApiException(response.statusCode, 'Erro ${response.statusCode}');

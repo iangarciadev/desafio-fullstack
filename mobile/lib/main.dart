@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'services/api.dart';
 import 'theme.dart';
 
 /// Ponto de entrada do aplicativo. Inicializa o Flutter e executa [MyApp].
@@ -16,7 +17,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Gestão de Clientes',
       theme: buildAppTheme(),
-      home: const LoginScreen(),
+      navigatorKey: navigatorKey,
+      initialRoute: '/login',
+      routes: {
+        '/login': (_) => const LoginScreen(),
+      },
     );
   }
 }
