@@ -87,7 +87,9 @@ app.use('/users', usersRoutes)
 app.use('/clients', clientsRoutes)
 app.use('/tasks', tasksRoutes)
 
-app.listen(3000, () => {
-  logger.info('Servidor iniciado na porta 3000')
-  logger.info('Documentação disponível em http://localhost:3000/docs')
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
+  logger.info(`Servidor iniciado na porta ${PORT}`)
+  logger.info(`Documentação disponível em http://localhost:${PORT}/docs`)
 })
