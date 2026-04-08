@@ -18,6 +18,95 @@ Aplicação fullstack de gerenciamento de clientes e tarefas. Usuários autentic
 
 ---
 
+## Como rodar com Docker (recomendado)
+
+> Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop) instalado e rodando.
+
+### 1. Configurar as variáveis de ambiente
+
+Copie o arquivo de exemplo e preencha os valores:
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+### 2. Subir todos os serviços
+
+```bash
+docker compose --env-file .env.docker up --build
+```
+
+Isso vai:
+1. Baixar as imagens necessárias
+2. Compilar o backend (TypeScript → JavaScript)
+3. Fazer o build do frontend (Vite)
+4. Subir banco de dados, backend e frontend em containers
+5. Rodar as migrations do banco automaticamente
+
+### 3. Acessar o sistema
+
+| Serviço | URL |
+|---|---|
+| Frontend | http://localhost |
+| Documentação da API (Swagger) | http://localhost:3000/docs |
+
+### 4. Criar um usuário e testar
+
+1. Acesse http://localhost:3000/docs
+2. Use `POST /users/register` para criar um usuário
+3. Use `POST /users/login` para obter o token JWT
+4. Clique em **Authorize** e cole o token para testar os demais endpoints
+5. Acesse http://localhost para usar o sistema pelo frontend
+
+---
+
+## Como rodar localmente (sem Docker)
+
+### Backend
+
+```bash
+cd backend
+cp .env.example .env  # configure DATABASE_URL e JWT_SECRET
+npm install
+npx prisma migrate dev
+npm run dev
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Mobile
+
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
+
+> Por padrão, a URL da API aponta para `http://localhost:3000`. Para alterar, defina a variável de ambiente `API_URL` ao compilar:
+> ```bash
+> flutter run --dart-define=API_URL=http://seu-servidor:3000
+> ```
+
+---
+
+## Estrutura do projeto
+
+```
+.
+├── backend/        # API Node.js + TypeScript + Express
+├── frontend/       # Interface Vue 3 + Vite
+├── mobile/         # App Flutter
+└── docker-compose.yml
+```
+
+---
+
 ## Backend
 
 Localizado em [backend/](backend/).
@@ -35,16 +124,6 @@ Localizado em [backend/](backend/).
 | **pino + pino-http** | Logging estruturado em JSON das requisições e eventos do servidor |
 | **ts-node** | Execução direta de arquivos TypeScript em desenvolvimento |
 
-### Como rodar
-
-```bash
-cd backend
-cp .env.example .env  # configure DATABASE_URL e JWT_SECRET
-npm install
-npx prisma migrate dev
-npm run dev
-```
-
 ### Logs estruturados
 
 O backend utiliza [Pino](https://getpino.io) para logging estruturado em JSON. Todas as requisições HTTP são registradas automaticamente, incluindo método, rota, status code e tempo de resposta.
@@ -58,16 +137,6 @@ Exemplo de entrada no arquivo de log:
 {"level":30,"time":1712345679,"method":"POST","url":"/users/login","statusCode":200,"responseTime":43}
 {"level":40,"time":1712345680,"path":"/clients","method":"GET","msg":"Auth rejeitado: token inválido"}
 ```
-
-### Documentação da API
-
-Com o servidor rodando, acesse `http://localhost:3000/docs` para visualizar e testar todos os endpoints via Swagger UI.
-
-Para autenticar na interface:
-1. Faça login em `POST /users/login` e copie o token retornado
-2. Clique em **Authorize** (canto superior direito) e cole o token
-
-> O `/docs` só está disponível quando `NODE_ENV` não é `production`.
 
 ### Preenchimento automático de endereço
 
@@ -89,14 +158,6 @@ Localizado em [frontend/](frontend/).
 | **Axios** | Cliente HTTP para comunicação com a API do backend |
 | **Prettier + ESLint + Oxlint** | Formatação e análise estática do código |
 
-### Como rodar
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
 ---
 
 ## Mobile
@@ -109,16 +170,3 @@ Localizado em [mobile/](mobile/).
 | **Dart** | Linguagem de programação utilizada pelo Flutter |
 | **http** | Cliente HTTP para comunicação com a API do backend |
 | **google_fonts** | Tipografia com a fonte Inter na interface |
-
-### Como rodar
-
-```bash
-cd mobile
-flutter pub get
-flutter run
-```
-
-> Por padrão, a URL da API aponta para `http://localhost:3000`. Para alterar, defina a variável de ambiente `API_URL` ao compilar:
-> ```bash
-> flutter run --dart-define=API_URL=http://seu-servidor:3000
-> ```
