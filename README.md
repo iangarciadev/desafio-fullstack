@@ -10,9 +10,11 @@ Aplicação fullstack de gerenciamento de clientes e tarefas. Usuários autentic
 
 - Autenticação de usuários com login e geração de token JWT
 - Listagem e cadastro de clientes vinculados ao usuário autenticado
+- Preenchimento automático de endereço via CEP (integração com ViaCEP)
 - Criação de tarefas associadas a clientes
 - Atualização de status das tarefas (Pendente, Em andamento, Concluída)
 - Filtro de tarefas por status no frontend
+- Documentação interativa da API via Swagger UI
 
 ---
 
@@ -29,6 +31,7 @@ Localizado em [backend/](backend/).
 | **JWT (jsonwebtoken)** | Geração e validação de tokens de autenticação |
 | **bcrypt** | Hash de senhas antes de armazená-las no banco |
 | **cors** | Middleware para liberar requisições cross-origin do frontend |
+| **swagger-jsdoc + swagger-ui-express** | Geração e exibição da documentação interativa da API |
 | **ts-node** | Execução direta de arquivos TypeScript em desenvolvimento |
 
 ### Como rodar
@@ -40,6 +43,20 @@ npm install
 npx prisma migrate dev
 npm run dev
 ```
+
+### Documentação da API
+
+Com o servidor rodando, acesse `http://localhost:3000/docs` para visualizar e testar todos os endpoints via Swagger UI.
+
+Para autenticar na interface:
+1. Faça login em `POST /users/login` e copie o token retornado
+2. Clique em **Authorize** (canto superior direito) e cole o token
+
+> O `/docs` só está disponível quando `NODE_ENV` não é `production`.
+
+### Preenchimento automático de endereço
+
+Ao cadastrar ou editar um cliente, basta informar o CEP. O frontend consulta a API pública [ViaCEP](https://viacep.com.br) e preenche automaticamente os campos de logradouro, bairro, cidade e estado.
 
 ---
 
