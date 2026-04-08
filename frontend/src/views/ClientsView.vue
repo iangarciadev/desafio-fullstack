@@ -41,8 +41,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
+import type { Client } from '../types'
 
-const clients = ref<{ id: number; name: string; email: string }[]>([])
+const clients = ref<Client[]>([])
 const name = ref('')
 const email = ref('')
 const error = ref('')

@@ -69,9 +69,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
+import type { Client, Task } from '../types'
 
-const tasks = ref<{ id: number; title: string; status: string; client: { name: string } }[]>([])
-const clients = ref<{ id: number; name: string }[]>([])
+const tasks = ref<Task[]>([])
+const clients = ref<Client[]>([])
 const title = ref('')
 const description = ref('')
 const clientId = ref<number | null>(null)
@@ -142,7 +143,7 @@ async function handleCreate() {
 
 // Atualiza o status de uma tarefa via PUT /tasks/:id com o novo valor selecionado.
 // O estado local só é atualizado após a confirmação da API via fetchTasks().
-async function handleUpdateStatus(task: { id: number; status: string }, newStatus: string) {
+async function handleUpdateStatus(task: Task, newStatus: string) {
   error.value = ''
   try {
     await api.put(`/tasks/${task.id}`, { status: newStatus })
