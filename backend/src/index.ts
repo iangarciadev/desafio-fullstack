@@ -72,12 +72,14 @@ const swaggerOptions: swaggerJsdoc.Options = {
       },
     },
   },
-  apis: ['./src/modules/**/*.routes.ts'],
+  apis: process.env.NODE_ENV === 'production'
+    ? ['./dist/modules/**/*.routes.js']
+    : ['./src/modules/**/*.routes.ts'],
 }
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions)
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_DOCS === 'true') {
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 }
 
