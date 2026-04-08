@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { z } from 'zod'
 import prisma from '../../prisma'
+import logger from '../../logger'
 
 const clientSchema = z.object({
   name: z.string().min(1, { message: 'Nome obrigatório' }).max(100),
@@ -23,20 +24,28 @@ export async function createClient(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.issues[0].message })
   }
 
-  const client = await prisma.client.create({
-    data: { ...parsed.data, userId: req.userId }
-  })
-
-  return res.status(201).json(client)
+  try {
+    const client = await prisma.client.create({
+      data: { ...parsed.data, userId: req.userId }
+    })
+    return res.status(201).json(client)
+  } catch (err) {
+    logger.error(err, 'Erro ao criar cliente')
+    return res.status(500).json({ error: 'Erro interno do servidor' })
+  }
 }
 
 // Retorna todos os clientes que pertencem ao usuário autenticado.
 export async function getClients(req: Request, res: Response) {
-  const clients = await prisma.client.findMany({
-    where: { userId: req.userId }
-  })
-
-  return res.json(clients)
+  try {
+    const clients = await prisma.client.findMany({
+      where: { userId: req.userId }
+    })
+    return res.json(clients)
+  } catch (err) {
+    logger.error(err, 'Erro ao buscar clientes')
+    return res.status(500).json({ error: 'Erro interno do servidor' })
+  }
 }
 
 // Atualiza nome e/ou e-mail de um cliente pelo seu id.
@@ -48,30 +57,37 @@ export async function updateClient(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.issues[0].message })
   }
 
-  const client = await prisma.client.findUnique({ where: { id: Number(id) } })
+  try {
+    const client = await prisma.client.findUnique({ where: { id: Number(id) } })
 
-  if (!client) return res.status(404).json({ error: 'Cliente não encontrado' })
-  if (client.userId !== req.userId) return res.status(403).json({ error: 'Acesso negado' })
+    if (!client) return res.status(404).json({ error: 'Cliente não encontrado' })
+    if (client.userId !== req.userId) return res.status(403).json({ error: 'Acesso negado' })
 
-  const updated = await prisma.client.update({
-    where: { id: Number(id) },
-    data: parsed.data
-  })
-
-  return res.json(updated)
+    const updated = await prisma.client.update({
+      where: { id: Number(id) },
+      data: parsed.data
+    })
+    return res.json(updated)
+  } catch (err) {
+    logger.error(err, 'Erro ao atualizar cliente')
+    return res.status(500).json({ error: 'Erro interno do servidor' })
+  }
 }
 
 // Remove um cliente pelo id. Responde com 204 (sem corpo) em caso de sucesso.
 export async function deleteClient(req: Request, res: Response) {
   const { id } = req.params
 
-  const client = await prisma.client.findUnique({ where: { id: Number(id) } })
+  try {
+    const client = await prisma.client.findUnique({ where: { id: Number(id) } })
 
-  if (!client) return res.status(404).json({ error: 'Cliente não encontrado' })
+    if (!client) return res.status(404).json({ error: 'Cliente não encontrado' })
+    if (client.userId !== req.userId) return res.status(403).json({ error: 'Acesso negado' })
 
-  if (client.userId !== req.userId) return res.status(403).json({ error: 'Acesso negado' })
-
-  await prisma.client.delete({ where: { id: Number(id) } })
-
-  return res.status(204).send()
+    await prisma.client.delete({ where: { id: Number(id) } })
+    return res.status(204).send()
+  } catch (err) {
+    logger.error(err, 'Erro ao deletar cliente')
+    return res.status(500).json({ error: 'Erro interno do servidor' })
+  }
 }

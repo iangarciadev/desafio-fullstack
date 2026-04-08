@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
 import prisma from '../../prisma'
+import logger from '../../logger'
 
 const registerSchema = z.object({
   email: z.string().email({ message: 'E-mail inválido' }),
@@ -24,18 +25,23 @@ export async function register(req: Request, res: Response) {
 
   const { email, password } = parsed.data
 
-  const existingUser = await prisma.user.findUnique({ where: { email } })
-  if (existingUser) {
-    return res.status(400).json({ error: 'Email já cadastrado' })
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } })
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email já cadastrado' })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const user = await prisma.user.create({
+      data: { email, password: hashedPassword }
+    })
+
+    return res.status(201).json({ id: user.id, email: user.email })
+  } catch (err) {
+    logger.error(err, 'Erro ao registrar usuário')
+    return res.status(500).json({ error: 'Erro interno do servidor' })
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10)
-
-  const user = await prisma.user.create({
-    data: { email, password: hashedPassword }
-  })
-
-  return res.status(201).json({ id: user.id, email: user.email })
 }
 
 // Autentica um usuário. Confere se o e-mail existe e se a senha bate com o hash
@@ -48,21 +54,26 @@ export async function login(req: Request, res: Response) {
 
   const { email, password } = parsed.data
 
-  const user = await prisma.user.findUnique({ where: { email } })
-  if (!user) {
-    return res.status(401).json({ error: 'Credenciais inválidas' })
+  try {
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      return res.status(401).json({ error: 'Credenciais inválidas' })
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password)
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Credenciais inválidas' })
+    }
+
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '1d' }
+    )
+
+    return res.json({ token })
+  } catch (err) {
+    logger.error(err, 'Erro ao autenticar usuário')
+    return res.status(500).json({ error: 'Erro interno do servidor' })
   }
-
-  const passwordMatch = await bcrypt.compare(password, user.password)
-  if (!passwordMatch) {
-    return res.status(401).json({ error: 'Credenciais inválidas' })
-  }
-
-  const token = jwt.sign(
-    { userId: user.id },
-    process.env.JWT_SECRET as string,
-    { expiresIn: '1d' }
-  )
-
-  return res.json({ token })
 }
