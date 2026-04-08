@@ -19,7 +19,7 @@
         <div class="form-field">
           <label for="client">Cliente</label>
           <select id="client" v-model="clientId" class="input" required>
-            <option value="" disabled>Selecione um cliente</option>
+            <option :value="null" disabled>Selecione um cliente</option>
             <option v-for="client in clients" :key="client.id" :value="client.id">
               {{ client.name }}
             </option>
@@ -74,7 +74,7 @@ const tasks = ref<{ id: number; title: string; status: string; client: { name: s
 const clients = ref<{ id: number; name: string }[]>([])
 const title = ref('')
 const description = ref('')
-const clientId = ref('')
+const clientId = ref<number | null>(null)
 const statusFilter = ref('')
 const error = ref('')
 
@@ -123,6 +123,7 @@ async function fetchClients() {
 // Cria uma nova tarefa via POST /tasks com título, descrição e clientId.
 // Limpa o formulário e atualiza a lista de tarefas após a criação.
 async function handleCreate() {
+  if (!clientId.value) return
   error.value = ''
   try {
     await api.post('/tasks', {
@@ -132,7 +133,7 @@ async function handleCreate() {
     })
     title.value = ''
     description.value = ''
-    clientId.value = ''
+    clientId.value = null
     await fetchTasks()
   } catch {
     error.value = 'Erro ao adicionar tarefa. Tente novamente.'
