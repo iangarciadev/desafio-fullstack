@@ -433,7 +433,7 @@ class _TasksScreenState extends State<TasksScreen> {
                         itemCount: tasks.length,
                         itemBuilder: (context, index) {
                           final task = tasks[index];
-                          final status = task['status'] as String;
+                          final status = (task['status'] as String?) ?? 'PENDING';
 
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
@@ -451,7 +451,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          task['title'],
+                                          task['title'] as String? ?? '',
                                           style: GoogleFonts.inter(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,

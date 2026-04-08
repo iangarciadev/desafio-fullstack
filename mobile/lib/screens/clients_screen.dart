@@ -276,7 +276,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
-                                TasksScreen(clientId: client['id']),
+                                TasksScreen(clientId: client['id'] as int),
                           ),
                         );
                       },
@@ -295,7 +295,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      client['name'],
+                                      client['name'] as String? ?? '',
                                       style: GoogleFonts.inter(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
@@ -304,7 +304,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      client['email'],
+                                      client['email'] as String? ?? '',
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         color: AppColors.textMuted,
@@ -324,7 +324,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                                   if (value == 'edit') {
                                     _showClientForm(client: client);
                                   } else if (value == 'delete') {
-                                    _confirmDelete(client['id']);
+                                    _confirmDelete(client['id'] as int);
                                   }
                                 },
                                 itemBuilder: (_) => [
