@@ -8,6 +8,11 @@ import clientsRoutes from './modules/clients/clients.routes'
 import tasksRoutes from './modules/tasks/tasks.routes'
 import logger from './logger'
 
+if (!process.env.JWT_SECRET) {
+  logger.error('JWT_SECRET não definido. Encerrando o servidor.')
+  process.exit(1)
+}
+
 const app = express()
 app.use(cors())
 app.use(express.json())
