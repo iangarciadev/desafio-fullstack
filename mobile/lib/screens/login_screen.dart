@@ -27,7 +27,22 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Envia as credenciais para a API e, em caso de sucesso, armazena o token
   /// JWT em [authToken] e navega para [ClientsScreen]. Em caso de falha,
   /// exibe a mensagem de erro na tela.
+  bool _isValidEmail(String email) =>
+      RegExp(r'^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$').hasMatch(email);
+
   Future<void> handleLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    if (!_isValidEmail(email)) {
+      setState(() => error = 'Informe um e-mail válido.');
+      return;
+    }
+    if (password.isEmpty) {
+      setState(() => error = 'Informe a senha.');
+      return;
+    }
+
     setState(() {
       loading = true;
       error = '';
@@ -35,8 +50,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await apiPost('/users/login', {
-        'email': emailController.text,
-        'password': passwordController.text,
+        'email': email,
+        'password': password,
       });
 
       if (response['token'] != null) {

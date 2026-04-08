@@ -96,6 +96,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       ),
       builder: (ctx) {
         bool saving = false;
+        String? emailError;
         return StatefulBuilder(
           builder: (ctx, setModalState) {
             return Padding(
@@ -145,6 +146,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     decoration: InputDecoration(
                       labelText: 'E-mail',
                       labelStyle: GoogleFonts.inter(color: AppColors.textMuted),
+                      errorText: emailError,
                       filled: true,
                       fillColor: AppColors.background,
                       border: OutlineInputBorder(
@@ -165,7 +167,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
                             final n = nameCtrl.text.trim();
                             final e = emailCtrl.text.trim();
                             if (n.isEmpty || e.isEmpty) return;
-                            setModalState(() => saving = true);
+                            if (!RegExp(r'^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$').hasMatch(e)) {
+                              setModalState(() => emailError = 'E-mail inválido');
+                              return;
+                            }
+                            setModalState(() { emailError = null; saving = true; });
                             final ok = client == null
                                 ? await createClient(n, e)
                                 : await editClient(client['id'], n, e);
