@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-// Instância do axios configurada com a URL base da API.
+// Instância do axios configurada com a URL base da API definida em VITE_API_URL.
 const api = axios.create({
-  baseURL: 'http://localhost:3000'
+  baseURL: import.meta.env.VITE_API_URL
 })
 
 // Interceptor que injeta o token JWT no header Authorization de todas as requisições.
