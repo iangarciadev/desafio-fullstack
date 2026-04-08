@@ -17,13 +17,20 @@ model User {
 }
 
 model Client {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  tasks     Task[]
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  cep         String?
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  estado      String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  tasks       Task[]
+  createdAt   DateTime @default(now())
 }
 
 model Task {

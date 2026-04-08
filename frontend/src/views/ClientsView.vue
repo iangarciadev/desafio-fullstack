@@ -7,16 +7,60 @@
 
     <div class="card form-card">
       <h2>Adicionar cliente</h2>
-      <form @submit.prevent="handleCreate" class="form-row">
-        <div class="form-field">
-          <label for="name">Nome</label>
-          <input id="name" v-model="name" class="input" placeholder="Nome completo" required />
+      <form @submit.prevent="handleCreate">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="name">Nome</label>
+            <input id="name" v-model="name" class="input" placeholder="Nome completo" required />
+          </div>
+          <div class="form-field">
+            <label for="email">Email</label>
+            <input id="email" v-model="email" class="input" type="email" placeholder="email@exemplo.com" required />
+          </div>
         </div>
-        <div class="form-field">
-          <label for="email">Email</label>
-          <input id="email" v-model="email" class="input" type="email" placeholder="email@exemplo.com" required />
+        <div class="form-row">
+          <div class="form-field form-field--cep">
+            <label for="cep">CEP</label>
+            <input
+              id="cep"
+              v-model="cep"
+              class="input"
+              placeholder="00000-000"
+              maxlength="9"
+              @input="onCepInput"
+            />
+          </div>
+          <div class="form-field form-field--grow">
+            <label for="logradouro">Logradouro</label>
+            <input id="logradouro" v-model="logradouro" class="input" placeholder="Preenchido pelo CEP" :readonly="cepPreenchido" />
+          </div>
+          <div class="form-field form-field--numero">
+            <label for="numero">Número</label>
+            <input id="numero" v-model="numero" class="input" placeholder="Nº" />
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-add">Adicionar</button>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="complemento">Complemento</label>
+            <input id="complemento" v-model="complemento" class="input" placeholder="Apto, sala..." />
+          </div>
+          <div class="form-field">
+            <label for="bairro">Bairro</label>
+            <input id="bairro" v-model="bairro" class="input" placeholder="Preenchido pelo CEP" :readonly="cepPreenchido" />
+          </div>
+          <div class="form-field">
+            <label for="cidade">Cidade</label>
+            <input id="cidade" v-model="cidade" class="input" placeholder="Preenchido pelo CEP" :readonly="cepPreenchido" />
+          </div>
+          <div class="form-field form-field--estado">
+            <label for="estado">UF</label>
+            <input id="estado" v-model="estado" class="input" placeholder="UF" :readonly="cepPreenchido" />
+          </div>
+        </div>
+        <p v-if="cepError" class="error-msg">{{ cepError }}</p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Adicionar</button>
+        </div>
       </form>
       <p v-if="error" class="error-msg">{{ error }}</p>
     </div>
@@ -31,6 +75,9 @@
           <div class="client-info">
             <span class="client-name">{{ client.name }}</span>
             <span class="client-email">{{ client.email }}</span>
+            <span v-if="client.logradouro" class="client-address">
+              {{ client.logradouro }}{{ client.numero ? ', ' + client.numero : '' }}{{ client.complemento ? ' - ' + client.complemento : '' }} — {{ client.bairro }}, {{ client.cidade }}/{{ client.estado }}
+            </span>
           </div>
         </li>
       </ul>
@@ -46,7 +93,16 @@ import type { Client } from '../types'
 const clients = ref<Client[]>([])
 const name = ref('')
 const email = ref('')
+const cep = ref('')
+const logradouro = ref('')
+const numero = ref('')
+const complemento = ref('')
+const bairro = ref('')
+const cidade = ref('')
+const estado = ref('')
+const cepPreenchido = ref(false)
 const error = ref('')
+const cepError = ref('')
 
 // Busca todos os clientes do usuário autenticado via GET /clients e popula a lista.
 async function fetchClients() {
@@ -58,13 +114,60 @@ async function fetchClients() {
   }
 }
 
-// Cria um novo cliente via POST /clients com nome e email, limpa o formulário e atualiza a lista.
+// Aplica máscara xxxxx-xxx ao CEP e chama ViaCEP ao completar 8 dígitos.
+async function onCepInput(event: Event) {
+  const input = event.target as HTMLInputElement
+  let digits = input.value.replace(/\D/g, '').slice(0, 8)
+  cep.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+  cepError.value = ''
+
+  if (digits.length === 8) {
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const data = await res.json()
+      if (data.erro) {
+        cepError.value = 'CEP não encontrado.'
+        cepPreenchido.value = false
+      } else {
+        logradouro.value = data.logradouro ?? ''
+        bairro.value = data.bairro ?? ''
+        cidade.value = data.localidade ?? ''
+        estado.value = data.uf ?? ''
+        cepPreenchido.value = true
+      }
+    } catch {
+      cepError.value = 'Erro ao buscar CEP. Tente novamente.'
+    }
+  } else {
+    cepPreenchido.value = false
+  }
+}
+
+// Cria um novo cliente via POST /clients com nome, email e endereço, limpa o formulário e atualiza a lista.
 async function handleCreate() {
   error.value = ''
   try {
-    await api.post('/clients', { name: name.value, email: email.value })
+    await api.post('/clients', {
+      name: name.value,
+      email: email.value,
+      cep: cep.value || undefined,
+      logradouro: logradouro.value || undefined,
+      numero: numero.value || undefined,
+      complemento: complemento.value || undefined,
+      bairro: bairro.value || undefined,
+      cidade: cidade.value || undefined,
+      estado: estado.value || undefined,
+    })
     name.value = ''
     email.value = ''
+    cep.value = ''
+    logradouro.value = ''
+    numero.value = ''
+    complemento.value = ''
+    bairro.value = ''
+    cidade.value = ''
+    estado.value = ''
+    cepPreenchido.value = false
     await fetchClients()
   } catch {
     error.value = 'Erro ao adicionar cliente. Tente novamente.'
@@ -100,15 +203,38 @@ onMounted(fetchClients)
   display: flex;
   gap: 1rem;
   align-items: flex-end;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .form-row .form-field {
   flex: 1;
+  min-width: 140px;
 }
 
-.btn-add {
-  white-space: nowrap;
-  height: 38px;
+.form-field--cep {
+  flex: 0 0 120px !important;
+  min-width: 120px !important;
+}
+
+.form-field--numero {
+  flex: 0 0 90px !important;
+  min-width: 90px !important;
+}
+
+.form-field--estado {
+  flex: 0 0 70px !important;
+  min-width: 70px !important;
+}
+
+.form-field--grow {
+  flex: 2 !important;
+}
+
+.form-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .empty-state {
@@ -164,6 +290,11 @@ onMounted(fetchClients)
 
 .client-email {
   font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.client-address {
+  font-size: 0.78rem;
   color: var(--color-text-muted);
 }
 </style>

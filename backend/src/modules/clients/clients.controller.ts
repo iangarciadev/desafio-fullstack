@@ -3,10 +3,10 @@ import prisma from '../../prisma'
 
 // Cria um novo cliente vinculado ao usuário autenticado.
 export async function createClient(req: Request, res: Response) {
-  const { name, email } = req.body
+  const { name, email, cep, logradouro, numero, complemento, bairro, cidade, estado } = req.body
 
   const client = await prisma.client.create({
-    data: { name, email, userId: req.userId }
+    data: { name, email, cep, logradouro, numero, complemento, bairro, cidade, estado, userId: req.userId }
   })
 
   return res.status(201).json(client)
@@ -24,7 +24,7 @@ export async function getClients(req: Request, res: Response) {
 // Atualiza nome e/ou e-mail de um cliente pelo seu id.
 export async function updateClient(req: Request, res: Response) {
   const { id } = req.params
-  const { name, email } = req.body
+  const { name, email, cep, logradouro, numero, complemento, bairro, cidade, estado } = req.body
 
   const client = await prisma.client.findUnique({ where: { id: Number(id) } })
 
@@ -33,7 +33,7 @@ export async function updateClient(req: Request, res: Response) {
 
   const updated = await prisma.client.update({
     where: { id: Number(id) },
-    data: { name, email }
+    data: { name, email, cep, logradouro, numero, complemento, bairro, cidade, estado }
   })
 
   return res.json(updated)

@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE `client` ADD COLUMN `bairro` VARCHAR(191) NULL,
+    ADD COLUMN `cep` VARCHAR(191) NULL,
+    ADD COLUMN `cidade` VARCHAR(191) NULL,
+    ADD COLUMN `complemento` VARCHAR(191) NULL,
+    ADD COLUMN `estado` VARCHAR(191) NULL,
+    ADD COLUMN `logradouro` VARCHAR(191) NULL,
+    ADD COLUMN `numero` VARCHAR(191) NULL;
